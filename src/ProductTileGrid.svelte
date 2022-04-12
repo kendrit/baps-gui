@@ -1,42 +1,50 @@
 <script>
     import ProductTile from './ProductTile.svelte'
-    export let count = "20";
+    import Tile from './tile.js'
     let tiles = [];
-    let fruits = [];
     let url = 'https://www.reddit.com/r/buildapcsales.json';
-    let loaded = false;
-    let promise = [getTiles()];
+    let promise = getTiles();
+    function filterPost(data) {
+        if (data.link_flair_css_class === "expired") {
+            return false;
+        } else {
+            return true;
+        }
+    }
     async function getTiles() {
-        fetch(url)
+        await fetch(url)
         .then(response => response.json())
         .then(body => {
             for (let index = 0; index < body.data.children.length; index++) {
-                let newTile = {
-                    "title": body.data.children[index].data.title,
-                    "link":  body.data.children[index].data.url
-                };
-                tiles.push(newTile);
+                let data = body.data.children[index].data;
+                let _title = data.title;
+                let _url = data.url;
+                let _purl = data.permalink;
+                if (filterPost(data)) {
+                    let newTile = new Tile(_title, _url, _purl);
+                    tiles.push(newTile);
+                }
+                console.log(body.data.children[index]);
             }
         })
-        console.log(tiles);
         return tiles;
     }
 </script>
-
 <div class="grid-container">
+    {#await promise}
     <ProductTile />
-    {#await promise then value}
-        {console.log({value}.value[0])}
-        {#each {value}.value as tile}
-            {console.log(tile)}
-            <ProductTile title={tile.title} url={tile.url}/>
+    {:then tilees}
+        {#each tilees as tilee}
+        <ProductTile title={tilee.title} url={tilee.url} post_url={tilee.post_url}/>
         {/each}
     {/await}
 </div>
 
 <style>
-    /* .grid-container {
-        display: flex;
+    .grid-container {
+        display: grid;
         column-gap: 50px;
-    } */
+        row-gap: 50px;
+        grid-template-columns: auto auto auto;
+    }
 </style>
