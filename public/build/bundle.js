@@ -4,6 +4,9 @@ var app = (function () {
     'use strict';
 
     function noop() { }
+    function is_promise(value) {
+        return value && typeof value === 'object' && typeof value.then === 'function';
+    }
     function add_location(element, file, line, column, char) {
         element.__svelte_meta = {
             loc: { file, line, column, char }
@@ -36,6 +39,12 @@ var app = (function () {
     function detach(node) {
         node.parentNode.removeChild(node);
     }
+    function destroy_each(iterations, detaching) {
+        for (let i = 0; i < iterations.length; i += 1) {
+            if (iterations[i])
+                iterations[i].d(detaching);
+        }
+    }
     function element(name) {
         return document.createElement(name);
     }
@@ -44,6 +53,9 @@ var app = (function () {
     }
     function space() {
         return text(' ');
+    }
+    function empty() {
+        return text('');
     }
     function listen(node, event, handler, options) {
         node.addEventListener(event, handler, options);
@@ -70,6 +82,11 @@ var app = (function () {
     let current_component;
     function set_current_component(component) {
         current_component = component;
+    }
+    function get_current_component() {
+        if (!current_component)
+            throw new Error('Function called outside component initialization');
+        return current_component;
     }
 
     const dirty_components = [];
@@ -155,6 +172,19 @@ var app = (function () {
     }
     const outroing = new Set();
     let outros;
+    function group_outros() {
+        outros = {
+            r: 0,
+            c: [],
+            p: outros // parent group
+        };
+    }
+    function check_outros() {
+        if (!outros.r) {
+            run_all(outros.c);
+        }
+        outros = outros.p;
+    }
     function transition_in(block, local) {
         if (block && block.i) {
             outroing.delete(block);
@@ -177,6 +207,94 @@ var app = (function () {
             block.o(local);
         }
     }
+
+    function handle_promise(promise, info) {
+        const token = info.token = {};
+        function update(type, index, key, value) {
+            if (info.token !== token)
+                return;
+            info.resolved = value;
+            let child_ctx = info.ctx;
+            if (key !== undefined) {
+                child_ctx = child_ctx.slice();
+                child_ctx[key] = value;
+            }
+            const block = type && (info.current = type)(child_ctx);
+            let needs_flush = false;
+            if (info.block) {
+                if (info.blocks) {
+                    info.blocks.forEach((block, i) => {
+                        if (i !== index && block) {
+                            group_outros();
+                            transition_out(block, 1, 1, () => {
+                                if (info.blocks[i] === block) {
+                                    info.blocks[i] = null;
+                                }
+                            });
+                            check_outros();
+                        }
+                    });
+                }
+                else {
+                    info.block.d(1);
+                }
+                block.c();
+                transition_in(block, 1);
+                block.m(info.mount(), info.anchor);
+                needs_flush = true;
+            }
+            info.block = block;
+            if (info.blocks)
+                info.blocks[index] = block;
+            if (needs_flush) {
+                flush();
+            }
+        }
+        if (is_promise(promise)) {
+            const current_component = get_current_component();
+            promise.then(value => {
+                set_current_component(current_component);
+                update(info.then, 1, info.value, value);
+                set_current_component(null);
+            }, error => {
+                set_current_component(current_component);
+                update(info.catch, 2, info.error, error);
+                set_current_component(null);
+                if (!info.hasCatch) {
+                    throw error;
+                }
+            });
+            // if we previously had a then/catch block, destroy it
+            if (info.current !== info.pending) {
+                update(info.pending, 0);
+                return true;
+            }
+        }
+        else {
+            if (info.current !== info.then) {
+                update(info.then, 1, info.value, promise);
+                return true;
+            }
+            info.resolved = promise;
+        }
+    }
+    function update_await_block_branch(info, ctx, dirty) {
+        const child_ctx = ctx.slice();
+        const { resolved } = info;
+        if (info.current === info.then) {
+            child_ctx[info.value] = resolved;
+        }
+        if (info.current === info.catch) {
+            child_ctx[info.error] = resolved;
+        }
+        info.block.p(child_ctx, dirty);
+    }
+
+    const globals = (typeof window !== 'undefined'
+        ? window
+        : typeof globalThis !== 'undefined'
+            ? globalThis
+            : global);
     function create_component(block) {
         block && block.c();
     }
@@ -352,6 +470,15 @@ var app = (function () {
         dispatch_dev('SvelteDOMSetData', { node: text, data });
         text.data = data;
     }
+    function validate_each_argument(arg) {
+        if (typeof arg !== 'string' && !(arg && typeof arg === 'object' && 'length' in arg)) {
+            let msg = '{#each} only iterates over array-like objects.';
+            if (typeof Symbol === 'function' && arg && Symbol.iterator in arg) {
+                msg += ' You can use a spread to convert this iterable into an array.';
+            }
+            throw new Error(msg);
+        }
+    }
     function validate_slots(name, slot, keys) {
         for (const slot_key of Object.keys(slot)) {
             if (!~keys.indexOf(slot_key)) {
@@ -379,19 +506,17 @@ var app = (function () {
         $inject_state() { }
     }
 
-    /* src\ProductTile.svelte generated by Svelte v3.47.0 */
+    /* src/ProductTile.svelte generated by Svelte v3.47.0 */
 
-    const file$1 = "src\\ProductTile.svelte";
+    const file$2 = "src/ProductTile.svelte";
 
-    function create_fragment$1(ctx) {
+    function create_fragment$2(ctx) {
     	let div;
     	let h2;
     	let t0;
     	let t1;
-    	let p;
+    	let a;
     	let t2;
-    	let t3;
-    	let button;
 
     	const block = {
     		c: function create() {
@@ -399,16 +524,13 @@ var app = (function () {
     			h2 = element("h2");
     			t0 = text(/*title*/ ctx[0]);
     			t1 = space();
-    			p = element("p");
-    			t2 = text(/*description*/ ctx[1]);
-    			t3 = space();
-    			button = element("button");
-    			button.textContent = "VISIT";
-    			add_location(h2, file$1, 7, 4, 210);
-    			add_location(p, file$1, 8, 4, 232);
-    			add_location(button, file$1, 9, 4, 258);
+    			a = element("a");
+    			t2 = text("VISIT");
+    			add_location(h2, file$2, 6, 4, 132);
+    			attr_dev(a, "href", /*url*/ ctx[1]);
+    			add_location(a, file$2, 7, 4, 154);
     			attr_dev(div, "class", "product-tile-container svelte-1cu9w7w");
-    			add_location(div, file$1, 6, 0, 168);
+    			add_location(div, file$2, 5, 0, 90);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -418,19 +540,380 @@ var app = (function () {
     			append_dev(div, h2);
     			append_dev(h2, t0);
     			append_dev(div, t1);
-    			append_dev(div, p);
-    			append_dev(p, t2);
-    			append_dev(div, t3);
-    			append_dev(div, button);
+    			append_dev(div, a);
+    			append_dev(a, t2);
     		},
     		p: function update(ctx, [dirty]) {
     			if (dirty & /*title*/ 1) set_data_dev(t0, /*title*/ ctx[0]);
-    			if (dirty & /*description*/ 2) set_data_dev(t2, /*description*/ ctx[1]);
+
+    			if (dirty & /*url*/ 2) {
+    				attr_dev(a, "href", /*url*/ ctx[1]);
+    			}
     		},
     		i: noop,
     		o: noop,
     		d: function destroy(detaching) {
     			if (detaching) detach_dev(div);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_fragment$2.name,
+    		type: "component",
+    		source: "",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    function instance$2($$self, $$props, $$invalidate) {
+    	let { $$slots: slots = {}, $$scope } = $$props;
+    	validate_slots('ProductTile', slots, []);
+    	let { title = "A Product Title" } = $$props;
+    	let { url = "" } = $$props;
+    	const writable_props = ['title', 'url'];
+
+    	Object.keys($$props).forEach(key => {
+    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== '$$' && key !== 'slot') console.warn(`<ProductTile> was created with unknown prop '${key}'`);
+    	});
+
+    	$$self.$$set = $$props => {
+    		if ('title' in $$props) $$invalidate(0, title = $$props.title);
+    		if ('url' in $$props) $$invalidate(1, url = $$props.url);
+    	};
+
+    	$$self.$capture_state = () => ({ title, url });
+
+    	$$self.$inject_state = $$props => {
+    		if ('title' in $$props) $$invalidate(0, title = $$props.title);
+    		if ('url' in $$props) $$invalidate(1, url = $$props.url);
+    	};
+
+    	if ($$props && "$$inject" in $$props) {
+    		$$self.$inject_state($$props.$$inject);
+    	}
+
+    	return [title, url];
+    }
+
+    class ProductTile extends SvelteComponentDev {
+    	constructor(options) {
+    		super(options);
+    		init(this, options, instance$2, create_fragment$2, safe_not_equal, { title: 0, url: 1 });
+
+    		dispatch_dev("SvelteRegisterComponent", {
+    			component: this,
+    			tagName: "ProductTile",
+    			options,
+    			id: create_fragment$2.name
+    		});
+    	}
+
+    	get title() {
+    		throw new Error("<ProductTile>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set title(value) {
+    		throw new Error("<ProductTile>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get url() {
+    		throw new Error("<ProductTile>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set url(value) {
+    		throw new Error("<ProductTile>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+    }
+
+    /* src/ProductTileGrid.svelte generated by Svelte v3.47.0 */
+
+    const { console: console_1 } = globals;
+    const file$1 = "src/ProductTileGrid.svelte";
+
+    function get_each_context(ctx, list, i) {
+    	const child_ctx = ctx.slice();
+    	child_ctx[8] = list[i];
+    	return child_ctx;
+    }
+
+    // (1:0) <script>     import ProductTile from './ProductTile.svelte'     export let count = "20";     let tiles = [];     let fruits = [];     let url = 'https://www.reddit.com/r/buildapcsales.json';     let loaded = false;     let promise = [getTiles()];     async function getTiles() {         fetch(url)         .then(response => response.json())         .then(body => {             for (let index = 0; index < body.data.children.length; index++) {                 let newTile = {                     "title": body.data.children[index].data.title,                     "link":  body.data.children[index].data.url                 }
+    function create_catch_block(ctx) {
+    	const block = {
+    		c: noop,
+    		m: noop,
+    		p: noop,
+    		i: noop,
+    		o: noop,
+    		d: noop
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_catch_block.name,
+    		type: "catch",
+    		source: "(1:0) <script>     import ProductTile from './ProductTile.svelte'     export let count = \\\"20\\\";     let tiles = [];     let fruits = [];     let url = 'https://www.reddit.com/r/buildapcsales.json';     let loaded = false;     let promise = [getTiles()];     async function getTiles() {         fetch(url)         .then(response => response.json())         .then(body => {             for (let index = 0; index < body.data.children.length; index++) {                 let newTile = {                     \\\"title\\\": body.data.children[index].data.title,                     \\\"link\\\":  body.data.children[index].data.url                 }",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (28:31)          {console.log({value}
+    function create_then_block(ctx) {
+    	let t0_value = console.log(({ value: /*value*/ ctx[7] }).value[0]) + "";
+    	let t0;
+    	let t1;
+    	let each_1_anchor;
+    	let current;
+    	let each_value = ({ value: /*value*/ ctx[7] }).value;
+    	validate_each_argument(each_value);
+    	let each_blocks = [];
+
+    	for (let i = 0; i < each_value.length; i += 1) {
+    		each_blocks[i] = create_each_block(get_each_context(ctx, each_value, i));
+    	}
+
+    	const out = i => transition_out(each_blocks[i], 1, 1, () => {
+    		each_blocks[i] = null;
+    	});
+
+    	const block = {
+    		c: function create() {
+    			t0 = text(t0_value);
+    			t1 = space();
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].c();
+    			}
+
+    			each_1_anchor = empty();
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, t0, anchor);
+    			insert_dev(target, t1, anchor);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(target, anchor);
+    			}
+
+    			insert_dev(target, each_1_anchor, anchor);
+    			current = true;
+    		},
+    		p: function update(ctx, dirty) {
+    			if (dirty & /*promise, console*/ 1) {
+    				each_value = ({ value: /*value*/ ctx[7] }).value;
+    				validate_each_argument(each_value);
+    				let i;
+
+    				for (i = 0; i < each_value.length; i += 1) {
+    					const child_ctx = get_each_context(ctx, each_value, i);
+
+    					if (each_blocks[i]) {
+    						each_blocks[i].p(child_ctx, dirty);
+    						transition_in(each_blocks[i], 1);
+    					} else {
+    						each_blocks[i] = create_each_block(child_ctx);
+    						each_blocks[i].c();
+    						transition_in(each_blocks[i], 1);
+    						each_blocks[i].m(each_1_anchor.parentNode, each_1_anchor);
+    					}
+    				}
+
+    				group_outros();
+
+    				for (i = each_value.length; i < each_blocks.length; i += 1) {
+    					out(i);
+    				}
+
+    				check_outros();
+    			}
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+
+    			for (let i = 0; i < each_value.length; i += 1) {
+    				transition_in(each_blocks[i]);
+    			}
+
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			each_blocks = each_blocks.filter(Boolean);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				transition_out(each_blocks[i]);
+    			}
+
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(t0);
+    			if (detaching) detach_dev(t1);
+    			destroy_each(each_blocks, detaching);
+    			if (detaching) detach_dev(each_1_anchor);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_then_block.name,
+    		type: "then",
+    		source: "(28:31)          {console.log({value}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (30:8) {#each {value}.value as tile}
+    function create_each_block(ctx) {
+    	let t0_value = console.log(/*tile*/ ctx[8]) + "";
+    	let t0;
+    	let t1;
+    	let producttile;
+    	let current;
+
+    	producttile = new ProductTile({
+    			props: {
+    				title: /*tile*/ ctx[8].title,
+    				url: /*tile*/ ctx[8].url
+    			},
+    			$$inline: true
+    		});
+
+    	const block = {
+    		c: function create() {
+    			t0 = text(t0_value);
+    			t1 = space();
+    			create_component(producttile.$$.fragment);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, t0, anchor);
+    			insert_dev(target, t1, anchor);
+    			mount_component(producttile, target, anchor);
+    			current = true;
+    		},
+    		p: noop,
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(producttile.$$.fragment, local);
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			transition_out(producttile.$$.fragment, local);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(t0);
+    			if (detaching) detach_dev(t1);
+    			destroy_component(producttile, detaching);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_each_block.name,
+    		type: "each",
+    		source: "(30:8) {#each {value}.value as tile}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (1:0) <script>     import ProductTile from './ProductTile.svelte'     export let count = "20";     let tiles = [];     let fruits = [];     let url = 'https://www.reddit.com/r/buildapcsales.json';     let loaded = false;     let promise = [getTiles()];     async function getTiles() {         fetch(url)         .then(response => response.json())         .then(body => {             for (let index = 0; index < body.data.children.length; index++) {                 let newTile = {                     "title": body.data.children[index].data.title,                     "link":  body.data.children[index].data.url                 }
+    function create_pending_block(ctx) {
+    	const block = {
+    		c: noop,
+    		m: noop,
+    		p: noop,
+    		i: noop,
+    		o: noop,
+    		d: noop
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_pending_block.name,
+    		type: "pending",
+    		source: "(1:0) <script>     import ProductTile from './ProductTile.svelte'     export let count = \\\"20\\\";     let tiles = [];     let fruits = [];     let url = 'https://www.reddit.com/r/buildapcsales.json';     let loaded = false;     let promise = [getTiles()];     async function getTiles() {         fetch(url)         .then(response => response.json())         .then(body => {             for (let index = 0; index < body.data.children.length; index++) {                 let newTile = {                     \\\"title\\\": body.data.children[index].data.title,                     \\\"link\\\":  body.data.children[index].data.url                 }",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    function create_fragment$1(ctx) {
+    	let div;
+    	let producttile;
+    	let t;
+    	let current;
+    	producttile = new ProductTile({ $$inline: true });
+
+    	let info = {
+    		ctx,
+    		current: null,
+    		token: null,
+    		hasCatch: false,
+    		pending: create_pending_block,
+    		then: create_then_block,
+    		catch: create_catch_block,
+    		value: 7,
+    		blocks: [,,,]
+    	};
+
+    	handle_promise(/*promise*/ ctx[0], info);
+
+    	const block = {
+    		c: function create() {
+    			div = element("div");
+    			create_component(producttile.$$.fragment);
+    			t = space();
+    			info.block.c();
+    			attr_dev(div, "class", "grid-container");
+    			add_location(div, file$1, 25, 0, 754);
+    		},
+    		l: function claim(nodes) {
+    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, div, anchor);
+    			mount_component(producttile, div, null);
+    			append_dev(div, t);
+    			info.block.m(div, info.anchor = null);
+    			info.mount = () => div;
+    			info.anchor = null;
+    			current = true;
+    		},
+    		p: function update(new_ctx, [dirty]) {
+    			ctx = new_ctx;
+    			update_await_block_branch(info, ctx, dirty);
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(producttile.$$.fragment, local);
+    			transition_in(info.block);
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			transition_out(producttile.$$.fragment, local);
+
+    			for (let i = 0; i < 3; i += 1) {
+    				const block = info.blocks[i];
+    				transition_out(block);
+    			}
+
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(div);
+    			destroy_component(producttile);
+    			info.block.d();
+    			info.token = null;
+    			info = null;
     		}
     	};
 
@@ -447,79 +930,93 @@ var app = (function () {
 
     function instance$1($$self, $$props, $$invalidate) {
     	let { $$slots: slots = {}, $$scope } = $$props;
-    	validate_slots('ProductTile', slots, []);
-    	let { title = "A Product Title" } = $$props;
-    	let { description = "An example product description" } = $$props;
-    	let { productType = "General" } = $$props;
-    	const writable_props = ['title', 'description', 'productType'];
+    	validate_slots('ProductTileGrid', slots, []);
+    	let { count = "20" } = $$props;
+    	let tiles = [];
+    	let fruits = [];
+    	let url = 'https://www.reddit.com/r/buildapcsales.json';
+    	let loaded = false;
+    	let promise = [getTiles()];
+
+    	async function getTiles() {
+    		fetch(url).then(response => response.json()).then(body => {
+    			for (let index = 0; index < body.data.children.length; index++) {
+    				let newTile = {
+    					"title": body.data.children[index].data.title,
+    					"link": body.data.children[index].data.url
+    				};
+
+    				tiles.push(newTile);
+    			}
+    		});
+
+    		console.log(tiles);
+    		return tiles;
+    	}
+
+    	const writable_props = ['count'];
 
     	Object.keys($$props).forEach(key => {
-    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== '$$' && key !== 'slot') console.warn(`<ProductTile> was created with unknown prop '${key}'`);
+    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== '$$' && key !== 'slot') console_1.warn(`<ProductTileGrid> was created with unknown prop '${key}'`);
     	});
 
     	$$self.$$set = $$props => {
-    		if ('title' in $$props) $$invalidate(0, title = $$props.title);
-    		if ('description' in $$props) $$invalidate(1, description = $$props.description);
-    		if ('productType' in $$props) $$invalidate(2, productType = $$props.productType);
+    		if ('count' in $$props) $$invalidate(1, count = $$props.count);
     	};
 
-    	$$self.$capture_state = () => ({ title, description, productType });
+    	$$self.$capture_state = () => ({
+    		ProductTile,
+    		count,
+    		tiles,
+    		fruits,
+    		url,
+    		loaded,
+    		promise,
+    		getTiles
+    	});
 
     	$$self.$inject_state = $$props => {
-    		if ('title' in $$props) $$invalidate(0, title = $$props.title);
-    		if ('description' in $$props) $$invalidate(1, description = $$props.description);
-    		if ('productType' in $$props) $$invalidate(2, productType = $$props.productType);
+    		if ('count' in $$props) $$invalidate(1, count = $$props.count);
+    		if ('tiles' in $$props) tiles = $$props.tiles;
+    		if ('fruits' in $$props) fruits = $$props.fruits;
+    		if ('url' in $$props) url = $$props.url;
+    		if ('loaded' in $$props) loaded = $$props.loaded;
+    		if ('promise' in $$props) $$invalidate(0, promise = $$props.promise);
     	};
 
     	if ($$props && "$$inject" in $$props) {
     		$$self.$inject_state($$props.$$inject);
     	}
 
-    	return [title, description, productType];
+    	return [promise, count];
     }
 
-    class ProductTile extends SvelteComponentDev {
+    class ProductTileGrid extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$1, create_fragment$1, safe_not_equal, { title: 0, description: 1, productType: 2 });
+    		init(this, options, instance$1, create_fragment$1, safe_not_equal, { count: 1 });
 
     		dispatch_dev("SvelteRegisterComponent", {
     			component: this,
-    			tagName: "ProductTile",
+    			tagName: "ProductTileGrid",
     			options,
     			id: create_fragment$1.name
     		});
     	}
 
-    	get title() {
-    		throw new Error("<ProductTile>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	get count() {
+    		throw new Error("<ProductTileGrid>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
 
-    	set title(value) {
-    		throw new Error("<ProductTile>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	get description() {
-    		throw new Error("<ProductTile>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set description(value) {
-    		throw new Error("<ProductTile>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	get productType() {
-    		throw new Error("<ProductTile>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set productType(value) {
-    		throw new Error("<ProductTile>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	set count(value) {
+    		throw new Error("<ProductTileGrid>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
     }
 
-    /* src\App.svelte generated by Svelte v3.47.0 */
-    const file = "src\\App.svelte";
+    /* src/App.svelte generated by Svelte v3.47.0 */
+    const file = "src/App.svelte";
 
-    // (32:1) {#if editing}
+    // (36:1) {#if editing}
     function create_if_block(ctx) {
     	let div;
     	let input;
@@ -536,10 +1033,10 @@ var app = (function () {
     			button = element("button");
     			button.textContent = "SAVE";
     			attr_dev(input, "type", "text");
-    			add_location(input, file, 33, 3, 813);
-    			add_location(button, file, 34, 3, 861);
+    			add_location(input, file, 37, 3, 914);
+    			add_location(button, file, 38, 3, 962);
     			attr_dev(div, "class", "api-key header svelte-1t3nibc");
-    			add_location(div, file, 32, 2, 781);
+    			add_location(div, file, 36, 2, 882);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -573,7 +1070,7 @@ var app = (function () {
     		block,
     		id: create_if_block.name,
     		type: "if",
-    		source: "(32:1) {#if editing}",
+    		source: "(36:1) {#if editing}",
     		ctx
     	});
 
@@ -605,12 +1102,12 @@ var app = (function () {
     	let t12;
     	let h21;
     	let t14;
-    	let producttile;
+    	let producttilegrid;
     	let current;
     	let mounted;
     	let dispose;
     	let if_block = /*editing*/ ctx[3] && create_if_block(ctx);
-    	producttile = new ProductTile({ $$inline: true });
+    	producttilegrid = new ProductTileGrid({ $$inline: true });
 
     	const block = {
     		c: function create() {
@@ -641,25 +1138,25 @@ var app = (function () {
     			h21 = element("h2");
     			h21.textContent = "AVAILABLE PRODUCTS:";
     			t14 = space();
-    			create_component(producttile.$$.fragment);
-    			add_location(strong0, file, 21, 20, 385);
+    			create_component(producttilegrid.$$.fragment);
+    			add_location(strong0, file, 25, 20, 486);
     			attr_dev(h1, "class", "header svelte-1t3nibc");
-    			add_location(h1, file, 21, 1, 366);
-    			add_location(strong1, file, 23, 41, 489);
+    			add_location(h1, file, 25, 1, 467);
+    			add_location(strong1, file, 27, 41, 590);
     			attr_dev(h20, "class", "header subheader svelte-1t3nibc");
-    			add_location(h20, file, 23, 2, 450);
-    			add_location(strong2, file, 25, 3, 537);
+    			add_location(h20, file, 27, 2, 551);
+    			add_location(strong2, file, 29, 3, 638);
     			button0.hidden = button0_hidden_value = !/*apikey*/ ctx[0];
-    			add_location(button0, file, 27, 4, 611);
-    			add_location(button1, file, 28, 3, 704);
+    			add_location(button0, file, 31, 4, 712);
+    			add_location(button1, file, 32, 3, 805);
     			attr_dev(h3, "class", "svelte-1t3nibc");
-    			add_location(h3, file, 24, 2, 529);
+    			add_location(h3, file, 28, 2, 630);
     			attr_dev(div, "class", "header subheader svelte-1t3nibc");
-    			add_location(div, file, 22, 1, 417);
+    			add_location(div, file, 26, 1, 518);
     			attr_dev(h21, "class", "header svelte-1t3nibc");
-    			add_location(h21, file, 37, 1, 922);
+    			add_location(h21, file, 41, 1, 1023);
     			attr_dev(main, "class", "svelte-1t3nibc");
-    			add_location(main, file, 20, 0, 358);
+    			add_location(main, file, 24, 0, 459);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -687,7 +1184,7 @@ var app = (function () {
     			append_dev(main, t12);
     			append_dev(main, h21);
     			append_dev(main, t14);
-    			mount_component(producttile, main, null);
+    			mount_component(producttilegrid, main, null);
     			current = true;
 
     			if (!mounted) {
@@ -722,17 +1219,17 @@ var app = (function () {
     		},
     		i: function intro(local) {
     			if (current) return;
-    			transition_in(producttile.$$.fragment, local);
+    			transition_in(producttilegrid.$$.fragment, local);
     			current = true;
     		},
     		o: function outro(local) {
-    			transition_out(producttile.$$.fragment, local);
+    			transition_out(producttilegrid.$$.fragment, local);
     			current = false;
     		},
     		d: function destroy(detaching) {
     			if (detaching) detach_dev(main);
     			if (if_block) if_block.d();
-    			destroy_component(producttile);
+    			destroy_component(producttilegrid);
     			mounted = false;
     			run_all(dispose);
     		}
@@ -747,6 +1244,10 @@ var app = (function () {
     	});
 
     	return block;
+    }
+
+    function loadProductTiles() {
+    	return;
     }
 
     function instance($$self, $$props, $$invalidate) {
@@ -790,6 +1291,7 @@ var app = (function () {
 
     	$$self.$capture_state = () => ({
     		ProductTile,
+    		ProductTileGrid,
     		name,
     		apikey,
     		tempapikey,
@@ -797,7 +1299,8 @@ var app = (function () {
     		editing,
     		saveApiKey,
     		editApiKey,
-    		showOrHideApiKey
+    		showOrHideApiKey,
+    		loadProductTiles
     	});
 
     	$$self.$inject_state = $$props => {

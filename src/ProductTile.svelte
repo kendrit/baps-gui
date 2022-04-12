@@ -1,13 +1,11 @@
 <script>
     export let title = "A Product Title"
-    export let description = "An example product description"
-    export let productType = "General"
+    export let url = ""
 </script>
 
 <div class="product-tile-container">
     <h2>{title}</h2>
-    <p>{description}</p>
-    <button>VISIT</button>
+    <a href={url}>VISIT</a>
 </div>
 
 <style>

@@ -1,5 +1,6 @@
 <script>
 	import ProductTile from './ProductTile.svelte';
+	import ProductTileGrid from './ProductTileGrid.svelte';
 	export let name;
 	export let apikey;
 	let tempapikey;
@@ -15,6 +16,9 @@
 	}
 	function showOrHideApiKey() {
 		showKey = !showKey;
+	}
+	function loadProductTiles() {
+		return 
 	}
 </script>
 
@@ -36,7 +40,7 @@
 		</div>
 	{/if}
 	<h2 class="header">AVAILABLE PRODUCTS:</h2>
-	<ProductTile />
+	<ProductTileGrid/>
 </main>
 
 <style>
