@@ -2,43 +2,18 @@
 	import ProductTile from './ProductTile.svelte';
 	import ProductTileGrid from './ProductTileGrid.svelte';
 	export let name;
-	// export let apikey;
-	// let tempapikey;
-	// let showKey = false;
-	// let editing = false;
-	// function saveApiKey() {
-	// 	showKey = true;
-	// 	editing = false;
-	// 	apikey = tempapikey;
-	// }
-	// function editApiKey() {
-	// 	editing = true;
-	// }
-	// function showOrHideApiKey() {
-	// 	showKey = !showKey;
-	// }
-	// function loadProductTiles() {
-	// 	return 
-	// }
+	export let filters = [];
+	let dark = false;
+	function lightSwitch() {
+		window.document.body.classList.toggle('dark-mode')
+	}
 </script>
 
 <main>
-	<h1 class="header"><strong>BAPS-GUI</strong></h1>
+	<h1 class="header"><strong>BAPS-GUI</strong><button on:click={lightSwitch}>dark mode</button></h1>
 	<div class="header subheader">
 		<h2 class="header subheader">A GUI FOR <strong>r/BUILDAPCSALES</strong></h2>
-		<!-- <h3>
-			<strong>
-				Your current API key: </strong>{showKey ? apikey : " "} 
-				<button hidden={!apikey} on:click={showOrHideApiKey}>{showKey ? "HIDE" : "SHOW"}</button>
-			<button on:click={editApiKey}>EDIT</button>
-		</h3> -->
 	</div>
-	<!-- {#if editing}
-		<div class="api-key header">
-			<input type="text" bind:value={tempapikey}/>
-			<button on:click={saveApiKey}>SAVE</button>
-		</div>
-	{/if} -->
 	<h2 class="header">AVAILABLE PRODUCTS:</h2>
 	<ProductTileGrid/>
 </main>
@@ -80,5 +55,15 @@
 		main {
 			max-width: none;
 		}
+	}
+
+	:global(body) {
+		background-color: #ffffff;
+		color: #555;
+		transition: background-color 0.3s
+	}
+	:global(body.dark-mode) {
+		background-color: #222;
+		color: #ff3e00;
 	}
 </style>
