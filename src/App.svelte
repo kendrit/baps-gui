@@ -1,6 +1,8 @@
 <script>
 	import ProductTile from './ProductTile.svelte';
 	import ProductTileGrid from './ProductTileGrid.svelte';
+	import Fa from 'svelte-fa/src/fa.svelte';
+	import {faSun} from '@fortawesome/free-solid-svg-icons/index.es';
 	export let name;
 	export let filters = [];
 	let dark = false;
@@ -10,7 +12,7 @@
 </script>
 
 <main>
-	<h1 class="header"><strong>BAPS-GUI</strong><button on:click={lightSwitch}>dark mode</button></h1>
+	<h1 class="header"><strong>BAPS-GUI</strong><button on:click={lightSwitch}><Fa icon={faSun}/></button></h1>
 	<div class="header subheader">
 		<h2 class="header subheader">A GUI FOR <strong>r/BUILDAPCSALES</strong></h2>
 	</div>
