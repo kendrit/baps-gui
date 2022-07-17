@@ -5,7 +5,7 @@
     export let title = tile.title;
     export let url = tile.url;
     export let post_url = tile.post_url;
-    console.log(tile);
+    // console.log(tile);
 </script>
 
 <div class="product-tile-container">

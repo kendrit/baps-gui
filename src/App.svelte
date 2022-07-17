@@ -4,7 +4,6 @@
 	import Fa from 'svelte-fa/src/fa.svelte';
 	import {faSun} from '@fortawesome/free-solid-svg-icons/index.es';
 	export let name;
-	export let filters = [];
 	let dark = false;
 	function lightSwitch() {
 		window.document.body.classList.toggle('dark-mode')
@@ -14,7 +13,7 @@
 <main>
 	<h1 class="header"><strong>BAPS-GUI</strong><button on:click={lightSwitch}><Fa icon={faSun}/></button></h1>
 	<div class="header subheader">
-		<h2 class="header subheader">A GUI FOR <strong>r/BUILDAPCSALES</strong></h2>
+	<h2 class="header subheader">A GUI FOR <strong>r/BUILDAPCSALES</strong></h2>
 	</div>
 	<h2 class="header">AVAILABLE PRODUCTS:</h2>
 	<ProductTileGrid/>
@@ -22,10 +21,10 @@
 
 <style>
 	main {
-		text-align: center;
 		padding: 1em;
 		max-width: 240px;
 		margin: auto;
+		transition: color 0.3s
 	}
 
 	.header {
@@ -53,6 +52,15 @@
 		font-weight: 100;
 	}
 
+	button {
+		background-color: transparent;
+		border-width: 0;
+	}
+
+	button:hover {
+		background-color: #ff3e00;
+	}
+
 	@media (min-width: 640px) {
 		main {
 			max-width: none;
@@ -68,4 +76,8 @@
 		background-color: #222;
 		color: #ff3e00;
 	}
+	:global(.product-tile-container.dark-mode) {
+		background-color: #222;
+	}
+
 </style>
