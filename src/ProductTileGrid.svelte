@@ -92,7 +92,7 @@
     <h1>Loading...</h1>
     {:then tilees}
         {#each tilees as tilee}
-        <ProductTile tile={tilee}/>
+        <ProductTile tile={tilee} image='images/{tilee.data.link_flair_css_class.toLowerCase()}.jpg'/>
         {/each}
     {/await}
 </div>

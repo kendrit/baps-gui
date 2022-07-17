@@ -550,6 +550,7 @@ var app = (function () {
     	let img;
     	let img_src_value;
     	let img_alt_value;
+    	let div_style_value;
 
     	const block = {
     		c: function create() {
@@ -569,15 +570,15 @@ var app = (function () {
     			t7 = text(t7_value);
     			t8 = space();
     			img = element("img");
-    			add_location(h2, file$3, 11, 4, 303);
+    			add_location(h2, file$3, 13, 4, 426);
     			attr_dev(a0, "target", "_blank");
     			attr_dev(a0, "href", /*url*/ ctx[2]);
-    			add_location(a0, file$3, 12, 4, 325);
-    			add_location(br, file$3, 13, 4, 377);
+    			add_location(a0, file$3, 14, 4, 448);
+    			add_location(br, file$3, 15, 4, 500);
     			attr_dev(a1, "target", "_blank");
     			attr_dev(a1, "href", a1_href_value = "https://www.reddit.com" + /*post_url*/ ctx[3]);
-    			add_location(a1, file$3, 14, 4, 388);
-    			add_location(h4, file$3, 15, 4, 476);
+    			add_location(a1, file$3, 16, 4, 511);
+    			add_location(h4, file$3, 17, 4, 599);
 
     			if (!src_url_equal(img.src, img_src_value = /*data*/ ctx[0]
     			? "https://" + /*data*/ ctx[0].domain + "/favicon.ico"
@@ -587,9 +588,10 @@ var app = (function () {
     			? /*data*/ ctx[0].domain + " logo"
     			: "undefined logo");
 
-    			add_location(img, file$3, 16, 4, 516);
-    			attr_dev(div, "class", "product-tile-container svelte-w21rjt");
-    			add_location(div, file$3, 10, 0, 261);
+    			add_location(img, file$3, 18, 4, 639);
+    			attr_dev(div, "class", "product-tile-container svelte-f2dhsr");
+    			attr_dev(div, "style", div_style_value = "" + (/*bgImage*/ ctx[4] + " background-size: contain;"));
+    			add_location(div, file$3, 12, 0, 340);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -636,6 +638,10 @@ var app = (function () {
     			: "undefined logo")) {
     				attr_dev(img, "alt", img_alt_value);
     			}
+
+    			if (dirty & /*bgImage*/ 16 && div_style_value !== (div_style_value = "" + (/*bgImage*/ ctx[4] + " background-size: contain;"))) {
+    				attr_dev(div, "style", div_style_value);
+    			}
     		},
     		i: noop,
     		o: noop,
@@ -656,6 +662,7 @@ var app = (function () {
     }
 
     function instance$3($$self, $$props, $$invalidate) {
+    	let bgImage;
     	let { $$slots: slots = {}, $$scope } = $$props;
     	validate_slots('ProductTile', slots, []);
     	let { tile = new Tile() } = $$props;
@@ -663,35 +670,54 @@ var app = (function () {
     	let { title = tile.title } = $$props;
     	let { url = tile.url } = $$props;
     	let { post_url = tile.post_url } = $$props;
-    	const writable_props = ['tile', 'data', 'title', 'url', 'post_url'];
+    	let { image } = $$props;
+    	const writable_props = ['tile', 'data', 'title', 'url', 'post_url', 'image'];
 
     	Object.keys($$props).forEach(key => {
     		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== '$$' && key !== 'slot') console.warn(`<ProductTile> was created with unknown prop '${key}'`);
     	});
 
     	$$self.$$set = $$props => {
-    		if ('tile' in $$props) $$invalidate(4, tile = $$props.tile);
+    		if ('tile' in $$props) $$invalidate(5, tile = $$props.tile);
     		if ('data' in $$props) $$invalidate(0, data = $$props.data);
     		if ('title' in $$props) $$invalidate(1, title = $$props.title);
     		if ('url' in $$props) $$invalidate(2, url = $$props.url);
     		if ('post_url' in $$props) $$invalidate(3, post_url = $$props.post_url);
+    		if ('image' in $$props) $$invalidate(6, image = $$props.image);
     	};
 
-    	$$self.$capture_state = () => ({ Tile, tile, data, title, url, post_url });
+    	$$self.$capture_state = () => ({
+    		Tile,
+    		tile,
+    		data,
+    		title,
+    		url,
+    		post_url,
+    		image,
+    		bgImage
+    	});
 
     	$$self.$inject_state = $$props => {
-    		if ('tile' in $$props) $$invalidate(4, tile = $$props.tile);
+    		if ('tile' in $$props) $$invalidate(5, tile = $$props.tile);
     		if ('data' in $$props) $$invalidate(0, data = $$props.data);
     		if ('title' in $$props) $$invalidate(1, title = $$props.title);
     		if ('url' in $$props) $$invalidate(2, url = $$props.url);
     		if ('post_url' in $$props) $$invalidate(3, post_url = $$props.post_url);
+    		if ('image' in $$props) $$invalidate(6, image = $$props.image);
+    		if ('bgImage' in $$props) $$invalidate(4, bgImage = $$props.bgImage);
     	};
 
     	if ($$props && "$$inject" in $$props) {
     		$$self.$inject_state($$props.$$inject);
     	}
 
-    	return [data, title, url, post_url, tile];
+    	$$self.$$.update = () => {
+    		if ($$self.$$.dirty & /*image*/ 64) {
+    			$$invalidate(4, bgImage = `background-image: url("${image}");`);
+    		}
+    	};
+
+    	return [data, title, url, post_url, bgImage, tile, image];
     }
 
     class ProductTile extends SvelteComponentDev {
@@ -699,11 +725,12 @@ var app = (function () {
     		super(options);
 
     		init(this, options, instance$3, create_fragment$3, safe_not_equal, {
-    			tile: 4,
+    			tile: 5,
     			data: 0,
     			title: 1,
     			url: 2,
-    			post_url: 3
+    			post_url: 3,
+    			image: 6
     		});
 
     		dispatch_dev("SvelteRegisterComponent", {
@@ -712,6 +739,13 @@ var app = (function () {
     			options,
     			id: create_fragment$3.name
     		});
+
+    		const { ctx } = this.$$;
+    		const props = options.props || {};
+
+    		if (/*image*/ ctx[6] === undefined && !('image' in props)) {
+    			console.warn("<ProductTile> was created without expected prop 'image'");
+    		}
     	}
 
     	get tile() {
@@ -751,6 +785,14 @@ var app = (function () {
     	}
 
     	set post_url(value) {
+    		throw new Error("<ProductTile>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get image() {
+    		throw new Error("<ProductTile>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set image(value) {
     		throw new Error("<ProductTile>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
     }
@@ -1764,7 +1806,10 @@ var app = (function () {
     	let current;
 
     	producttile = new ProductTile({
-    			props: { tile: /*tilee*/ ctx[14] },
+    			props: {
+    				tile: /*tilee*/ ctx[14],
+    				image: "images/" + /*tilee*/ ctx[14].data.link_flair_css_class.toLowerCase() + ".jpg"
+    			},
     			$$inline: true
     		});
 
@@ -1779,6 +1824,7 @@ var app = (function () {
     		p: function update(ctx, dirty) {
     			const producttile_changes = {};
     			if (dirty & /*promise*/ 2) producttile_changes.tile = /*tilee*/ ctx[14];
+    			if (dirty & /*promise*/ 2) producttile_changes.image = "images/" + /*tilee*/ ctx[14].data.link_flair_css_class.toLowerCase() + ".jpg";
     			producttile.$set(producttile_changes);
     		},
     		i: function intro(local) {

@@ -5,10 +5,12 @@
     export let title = tile.title;
     export let url = tile.url;
     export let post_url = tile.post_url;
+    export let image;
+    $: bgImage = `background-image: url("${image}");`;
     // console.log(tile);
 </script>
 
-<div class="product-tile-container">
+<div class="product-tile-container" style="{bgImage} background-size: contain;">
     <h2>{title}</h2>
     <a target="_blank" href={url}>PRODUCT LINK</a>
     <br/>
@@ -21,12 +23,13 @@
     .product-tile-container {
         width: 300px;
         height: 300px;
-        background-color: white;
+        background-color: #000;
+        background-image: url("${image}");
         border-radius: 16px;
-        border-width: 2px;
+        border-width: 4px;
         border-style: solid;
         border-color: #ff3e00;
-        color: #222;
+        color: #ff3e00;
         padding: 2rem;
     }
 
