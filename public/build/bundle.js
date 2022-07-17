@@ -81,6 +81,14 @@ var app = (function () {
     function children(element) {
         return Array.from(element.childNodes);
     }
+    function set_style(node, key, value, important) {
+        if (value === null) {
+            node.style.removeProperty(key);
+        }
+        else {
+            node.style.setProperty(key, value, important ? 'important' : '');
+        }
+    }
     function toggle_class(element, name, toggle) {
         element.classList[toggle ? 'add' : 'remove'](name);
     }
@@ -589,7 +597,7 @@ var app = (function () {
     			: "undefined logo");
 
     			add_location(img, file$3, 18, 4, 639);
-    			attr_dev(div, "class", "product-tile-container svelte-f2dhsr");
+    			attr_dev(div, "class", "product-tile-container svelte-uvmsrl");
     			attr_dev(div, "style", div_style_value = "" + (/*bgImage*/ ctx[4] + " background-size: contain;"));
     			add_location(div, file$3, 12, 0, 340);
     		},
@@ -1642,8 +1650,8 @@ var app = (function () {
     			t2 = space();
     			attr_dev(input, "type", "checkbox");
     			input.checked = input_checked_value = /*filters*/ ctx[0][/*filter*/ ctx[17].toLowerCase()];
-    			add_location(input, file$1, 83, 12, 2748);
-    			add_location(label, file$1, 82, 8, 2728);
+    			add_location(input, file$1, 83, 12, 2809);
+    			add_location(label, file$1, 82, 8, 2789);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, label, anchor);
@@ -1806,10 +1814,7 @@ var app = (function () {
     	let current;
 
     	producttile = new ProductTile({
-    			props: {
-    				tile: /*tilee*/ ctx[14],
-    				image: "images/" + /*tilee*/ ctx[14].data.link_flair_css_class.toLowerCase() + ".jpg"
-    			},
+    			props: { tile: /*tilee*/ ctx[14], image: "" },
     			$$inline: true
     		});
 
@@ -1824,7 +1829,6 @@ var app = (function () {
     		p: function update(ctx, dirty) {
     			const producttile_changes = {};
     			if (dirty & /*promise*/ 2) producttile_changes.tile = /*tilee*/ ctx[14];
-    			if (dirty & /*promise*/ 2) producttile_changes.image = "images/" + /*tilee*/ ctx[14].data.link_flair_css_class.toLowerCase() + ".jpg";
     			producttile.$set(producttile_changes);
     		},
     		i: function intro(local) {
@@ -1860,7 +1864,7 @@ var app = (function () {
     		c: function create() {
     			h1 = element("h1");
     			h1.textContent = "Loading...";
-    			add_location(h1, file$1, 91, 4, 2967);
+    			add_location(h1, file$1, 91, 4, 3028);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, h1, anchor);
@@ -1887,11 +1891,14 @@ var app = (function () {
     function create_fragment$1(ctx) {
     	let div0;
     	let button0;
+    	let b0;
     	let fa;
     	let t0;
     	let button1;
+    	let b1;
     	let t2;
     	let button2;
+    	let b2;
     	let t4;
     	let div1;
     	let t5;
@@ -1934,13 +1941,16 @@ var app = (function () {
     		c: function create() {
     			div0 = element("div");
     			button0 = element("button");
+    			b0 = element("b");
     			create_component(fa.$$.fragment);
     			t0 = space();
     			button1 = element("button");
-    			button1.textContent = "Enable All";
+    			b1 = element("b");
+    			b1.textContent = "Enable All";
     			t2 = space();
     			button2 = element("button");
-    			button2.textContent = "Disable All";
+    			b2 = element("b");
+    			b2.textContent = "Disable All";
     			t4 = space();
     			div1 = element("div");
 
@@ -1953,18 +1963,23 @@ var app = (function () {
     			t6 = space();
     			div2 = element("div");
     			info.block.c();
+    			add_location(b0, file$1, 76, 31, 2513);
     			attr_dev(button0, "class", "svelte-1vjkkg4");
     			add_location(button0, file$1, 76, 4, 2486);
+    			add_location(b1, file$1, 77, 53, 2605);
+    			set_style(button1, "float", "right");
     			attr_dev(button1, "class", "svelte-1vjkkg4");
-    			add_location(button1, file$1, 77, 4, 2549);
+    			add_location(button1, file$1, 77, 4, 2556);
+    			add_location(b2, file$1, 78, 54, 2686);
+    			set_style(button2, "float", "right");
     			attr_dev(button2, "class", "svelte-1vjkkg4");
-    			add_location(button2, file$1, 78, 4, 2602);
+    			add_location(button2, file$1, 78, 4, 2636);
     			add_location(div0, file$1, 75, 0, 2476);
     			attr_dev(div1, "class", "filter-container svelte-1vjkkg4");
-    			add_location(div1, file$1, 80, 0, 2660);
-    			add_location(br, file$1, 88, 0, 2908);
+    			add_location(div1, file$1, 80, 0, 2721);
+    			add_location(br, file$1, 88, 0, 2969);
     			attr_dev(div2, "class", "grid-container svelte-1vjkkg4");
-    			add_location(div2, file$1, 89, 0, 2913);
+    			add_location(div2, file$1, 89, 0, 2974);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -1972,11 +1987,14 @@ var app = (function () {
     		m: function mount(target, anchor) {
     			insert_dev(target, div0, anchor);
     			append_dev(div0, button0);
-    			mount_component(fa, button0, null);
+    			append_dev(button0, b0);
+    			mount_component(fa, b0, null);
     			append_dev(div0, t0);
     			append_dev(div0, button1);
+    			append_dev(button1, b1);
     			append_dev(div0, t2);
     			append_dev(div0, button2);
+    			append_dev(button2, b2);
     			insert_dev(target, t4, anchor);
     			insert_dev(target, div1, anchor);
 
@@ -2300,18 +2318,18 @@ var app = (function () {
     			t6 = space();
     			create_component(producttilegrid.$$.fragment);
     			add_location(strong0, file, 13, 20, 382);
-    			attr_dev(button, "class", "svelte-1s8b2iu");
+    			attr_dev(button, "class", "svelte-62cpdt");
     			add_location(button, file, 13, 45, 407);
-    			attr_dev(h1, "class", "header svelte-1s8b2iu");
+    			attr_dev(h1, "class", "header svelte-62cpdt");
     			add_location(h1, file, 13, 1, 363);
     			add_location(strong1, file, 15, 40, 543);
-    			attr_dev(h20, "class", "header subheader svelte-1s8b2iu");
+    			attr_dev(h20, "class", "header subheader svelte-62cpdt");
     			add_location(h20, file, 15, 1, 504);
-    			attr_dev(div, "class", "header subheader svelte-1s8b2iu");
+    			attr_dev(div, "class", "header subheader svelte-62cpdt");
     			add_location(div, file, 14, 1, 472);
-    			attr_dev(h21, "class", "header svelte-1s8b2iu");
+    			attr_dev(h21, "class", "header svelte-62cpdt");
     			add_location(h21, file, 17, 1, 590);
-    			attr_dev(main, "class", "svelte-1s8b2iu");
+    			attr_dev(main, "class", "svelte-62cpdt");
     			add_location(main, file, 12, 0, 355);
     		},
     		l: function claim(nodes) {

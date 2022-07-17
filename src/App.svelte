@@ -55,6 +55,7 @@
 	button {
 		background-color: transparent;
 		border-width: 0;
+		color: #ff3e00;
 	}
 
 	button:hover {

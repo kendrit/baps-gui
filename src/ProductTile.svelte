@@ -23,7 +23,7 @@
     .product-tile-container {
         width: 300px;
         height: 300px;
-        background-color: #000;
+        background-color: #FFF;
         background-image: url("${image}");
         border-radius: 16px;
         border-width: 4px;

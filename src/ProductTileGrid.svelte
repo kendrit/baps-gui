@@ -74,9 +74,9 @@
 </script>
 
 <div>
-    <button on:click={refresh}><Fa icon={faRefresh}/></button>
-    <button on:click={enableAll}>Enable All</button>
-    <button on:click={disableAll}>Disable All</button>
+    <button on:click={refresh}><b><Fa icon={faRefresh}/></b></button>
+    <button on:click={enableAll} style='float:right'><b>Enable All</b></button>
+    <button on:click={disableAll} style='float:right'><b>Disable All</b></button>
 </div>
 <div class="filter-container">
     {#each flairs as filter}
@@ -92,7 +92,7 @@
     <h1>Loading...</h1>
     {:then tilees}
         {#each tilees as tilee}
-        <ProductTile tile={tilee} image='images/{tilee.data.link_flair_css_class.toLowerCase()}.jpg'/>
+        <ProductTile tile={tilee} image=''/>
         {/each}
     {/await}
 </div>
