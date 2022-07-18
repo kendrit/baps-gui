@@ -13,9 +13,8 @@
 <main>
 	<h1 class="header"><strong>BAPS-GUI</strong><button on:click={lightSwitch}><Fa icon={faSun}/></button></h1>
 	<div class="header subheader">
-	<h2 class="header subheader">A GUI FOR <strong>r/BUILDAPCSALES</strong></h2>
+	<h2 class="header subheader">A GUI FOR <a href="https://www.reddit.com/r/buildapcsales"><strong>r/BUILDAPCSALES</strong></a></h2>
 	</div>
-	<h2 class="header">AVAILABLE PRODUCTS:</h2>
 	<ProductTileGrid/>
 </main>
 
@@ -24,7 +23,13 @@
 		padding: 1em;
 		max-width: 240px;
 		margin: auto;
-		transition: color 0.3s
+		transition: color 0.3s;
+		-ms-overflow-style: none;  /* IE and Edge */
+		scrollbar-width: none;  /* Firefox */
+	}
+
+	main::-webkit-scrollbar {
+		display: none;
 	}
 
 	.header {
@@ -69,16 +74,16 @@
 	}
 
 	:global(body) {
-		background-color: #ffffff;
-		color: #555;
+		background-color: #222;
+		color: #ff3e00;
 		transition: background-color 0.3s
 	}
 	:global(body.dark-mode) {
-		background-color: #222;
-		color: #ff3e00;
+		background-color: #fff;
+		color: #555;
 	}
 	:global(.product-tile-container.dark-mode) {
-		background-color: #222;
+		background-color: #fff;
 	}
 
 </style>
