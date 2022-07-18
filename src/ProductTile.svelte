@@ -6,11 +6,14 @@
     export let url = tile.url;
     export let post_url = tile.post_url;
     export let image;
+    let now = new Date().getTime() / 1000;
+    let daysAgo = Math.round((now - data.created) / 86400);
     $: bgImage = `background-image: url("${image}");`;
     // console.log(tile);
 </script>
 
 <div class="product-tile-container" style="{bgImage} background-size: contain;">
+    <p>{daysAgo} days ago by {data.author}</p>
     <h2>{title}</h2>
     <a target="_blank" href={url}>PRODUCT LINK</a>
     <br/>
@@ -21,10 +24,10 @@
 
 <style>
     .product-tile-container {
-        width: 300px;
-        height: 300px;
+        width: auto;
+        height: auto;
         background-color: #FFF;
-        background-image: url("${image}");
+        background-image: url(${data.thumbnail});
         border-radius: 16px;
         border-width: 4px;
         border-style: solid;

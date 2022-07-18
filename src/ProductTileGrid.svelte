@@ -4,9 +4,9 @@
     import Fa from 'svelte-fa/src/fa.svelte';
 	import {faRefresh} from '@fortawesome/free-solid-svg-icons/index.es';
     let filters = {};
-    let flairs = ["Meta", "Mod Post", "CPU", "Prebuilt", "GPU", "Misc", "Mouse", "Laptop", "RAM", "Fan", "Controller", "SSD-SATA", "Case", "Expired", "Printer", "Monitor", "Keyboard", "Headphones", "PSU", "Cooler"];
+    let flairs = ["Meta", "Mod Post", "CPU", "Prebuilt", "GPU", "Misc", "Mouse", "Laptop", "RAM", "Fan", "Controller", "SSD-SATA", "SSD-M2", "Case", "Printer", "Monitor", "Keyboard", "Headphones", "PSU", "Cooler"];
     let tiles = [];
-    let url = 'https://www.reddit.com/r/buildapcsales.json';
+    let url = 'https://www.reddit.com/r/buildapcsales/top.json?limit=100&t=month';
     let promise = getTiles();
     for (let i = 0; i < flairs.length; i++) {
         filters[flairs[i].toLowerCase()] = true;
@@ -30,6 +30,9 @@
         refresh();
     }
     function filterPost(data) {
+        if (data.link_flair_css_class == null) {
+            return false;
+        }
         for (let i = 0; i < flairs.length; i++) {
             return filters[data.link_flair_css_class.toLowerCase()];
         }
@@ -48,6 +51,7 @@
                 let _title = data.title;
                 let _url = data.url;
                 let _purl = data.permalink;
+                console.log(data);
                 if (filterPost(data)) {
                     let newTile = new Tile(data, _title, _url, _purl);
                     tiles.push(newTile);
@@ -56,11 +60,9 @@
                 }
             }
         })
+        tiles.sort((a, b) => (a.data.created < b.data.created) ? 1 : -1);
         return tiles;
     }
-    function isChecked(type) {
-		return filters[type.toLowerCase()];
-	}
     function changeFilter(filter) {
 		if (filters[filter.toLowerCase()]) {
             filters[filter.toLowerCase()] = false;
