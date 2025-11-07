@@ -27,7 +27,7 @@
     function generateUrl() {
         let filterList = Object.keys(filters);
         console.log(filterList);
-        let url = 'https://www.reddit.com/r/buildapcsales/' + selectedQueryType + '.json?limit=' + limit + '&t=month';
+        let url = 'https://api.reddit.com/r/buildapcsales/' + selectedQueryType + '.json?limit=' + limit + '&t=month';
         if (filters.length < 1) {
             return url;
         }
